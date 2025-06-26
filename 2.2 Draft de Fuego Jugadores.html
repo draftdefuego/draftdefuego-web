@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Perfil de Jugador - Draft de Fuego</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      max-width: 900px;
+      margin: auto;
+      position: relative;
+      background-color: #fafafa;
+    }
+
+    body::before {
+      content: "";
+      background-image: url('https://i.postimg.cc/zXVtBtQ4/logo-draft-de-fuego.png');
+      background-size: 400px;
+      background-repeat: no-repeat;
+      background-position: center;
+      opacity: 0.05;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+    }
+
+    .contenido {
+      position: relative;
+      z-index: 1;
+    }
+
+    input, button {
+      font-size: 16px;
+      padding: 8px;
+      margin: 10px 0;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    button {
+      background-color: #d93228;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background-color: #b92b22;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 6px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #eee;
+    }
+
+    .titulo {
+      font-size: 20px;
+      font-weight: bold;
+      margin-top: 20px;
+      border-bottom: 2px solid #d93228;
+      padding-bottom: 5px;
+    }
+
+    #banner {
+      width: 100%;
+      max-width: 100%;
+      margin-bottom: 20px;
+      border-radius: 8px;
+    }
+
+    .label {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="contenido">
+    <img id="banner" src="https://i.postimg.cc/GtM5f65x/Banner-de-Linked-In-Tecnolog-a-Abstracto-Azul-y-Blanco-14.png" alt="Banner Draft de Fuego">
+
+    <label class="label">Ingresá tu teléfono o email:</label>
+    <input type="text" id="entrada" placeholder="ej: 091234567 o jugador@email.com">
+    <button onclick="consultar()">Consultar</button>
+
+    <div id="resultado" style="margin-top: 20px;"></div>
+  </div>
+
+  <script>
+    document.getElementById("entrada").addEventListener("keypress", function(e) {
+      if (e.key === "Enter") {
+        consultar();
+      }
+    });
+
+    async function consultar() {
+      const entrada = document.getElementById("entrada").value.trim();
+      const resultadoDiv = document.getElementById("resultado");
+      resultadoDiv.innerHTML = "Consultando...";
+
+      if (!entrada) {
+        resultadoDiv.innerHTML = "Por favor ingresá un dato.";
+        return;
+      }
+
+      const esEmail = entrada.includes("@");
+      const param = esEmail ? `email=${encodeURIComponent(entrada)}` : `telefono=${encodeURIComponent(entrada.replace(/^0+/, ""))}`;
+
+      try {
+        const response = await fetch("https://script.google.com/macros/s/AKfycbywWxej0uhIM-SMefWrA62_WYeYRDjGNkDAbfVg-8pHG_ESw5E9tGiB9BnRdXpyBRzZ/exec?" + param);
+        const data = await response.json();
+
+        if (data.error) {
+          resultadoDiv.innerHTML = "⚠️ " + data.error;
+          return;
+        }
+
+        resultadoDiv.innerHTML = `
+          <div class="titulo">👤 ${data.nombre}</div>
+          <p>ID: ${data.id}</p>
+          <p>Teléfono: ${data.telefono}</p>
+          <p>Nacionalidad: ${data.nacionalidad}</p>
+          <p>Email: ${data.email}</p>
+          <p><strong>ELO histórico:</strong> ${data.elo}</p>
+          <p><strong>ELO temporada:</strong> ${data.eloTemporada}</p>
+          <p><strong>Winrate:</strong> ${data.winrate}%</p>
+          <p><strong>Torneos jugados:</strong> ${data.torneos}</p>
+          <p><strong>Partidas jugadas:</strong> ${data.partidas}</p>
+          <p><strong>Ganadas:</strong> ${data.ganadas}</p>
+          <p><strong>Perdidas:</strong> ${data.perdidas}</p>
+          <p><strong>Empatadas:</strong> ${data.empatadas}</p>
+          <div class="titulo">📋 Historial de partidas</div>
+          ${generarTabla(data.historial, data.columnas)}
+        `;
+      } catch (e) {
+        resultadoDiv.innerHTML = "❌ Error al consultar: " + e.message;
+      }
+    }
+
+    function generarTabla(historial, columnas) {
+      if (!historial || historial.length === 0) return "<p>Sin partidas registradas.</p>";
+
+      let html = "<table><thead><tr>";
+      columnas.forEach(col => html += `<th>${col}</th>`);
+      html += "</tr></thead><tbody>";
+
+      for (let i = 0; i < historial.length; i++) {
+        html += "<tr>" + historial[i].map(c => `<td>${c}</td>`).join("") + "</tr>";
+      }
+
+      html += "</tbody></table>";
+      return html;
+    }
+  </script>
+</body>
+</html>
